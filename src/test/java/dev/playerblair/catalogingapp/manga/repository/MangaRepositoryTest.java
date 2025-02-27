@@ -22,9 +22,6 @@ public class MangaRepositoryTest {
     @Autowired
     private AuthorRepository authorRepository;
 
-    private List<Manga> mangaList;
-    private List<Author> authors;
-
     @BeforeEach
     public void setUp() {
         Author author1 = Author.builder()
@@ -37,7 +34,7 @@ public class MangaRepositoryTest {
                 .name("Author2")
                 .build();
 
-        authors = List.of(author1, author2);
+        List<Author> authors = List.of(author1, author2);
         authors.forEach(author -> authorRepository.save(author));
 
         Manga manga1 = Manga.builder()
@@ -79,7 +76,7 @@ public class MangaRepositoryTest {
                 .volumes(0)
                 .build();
 
-        mangaList = List.of(manga1, manga2, manga3);
+        List<Manga> mangaList = List.of(manga1, manga2, manga3);
         mangaList.forEach(manga -> mangaRepository.save(manga));
     }
 
