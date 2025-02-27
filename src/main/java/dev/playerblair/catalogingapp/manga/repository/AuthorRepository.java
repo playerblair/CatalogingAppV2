@@ -1,4 +1,7 @@
 package dev.playerblair.catalogingapp.manga.repository;
 
-public interface AuthorRepository {
+import dev.playerblair.catalogingapp.manga.model.Author;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+public interface AuthorRepository extends MongoRepository<Author, Long> {
 }
