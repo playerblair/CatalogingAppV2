@@ -1,5 +1,6 @@
 package dev.playerblair.catalogingapp.manga.service;
 
+import dev.playerblair.catalogingapp.api.service.ApiService;
 import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
@@ -17,9 +18,12 @@ public class MangaServiceImpl implements MangaService{
     private final MangaRepository mangaRepository;
     private final AuthorRepository authorRepository;
 
-    public MangaServiceImpl(MangaRepository mangaRepository, AuthorRepository authorRepository) {
+    private final ApiService apiService;
+
+    public MangaServiceImpl(MangaRepository mangaRepository, AuthorRepository authorRepository, ApiService apiService) {
         this.mangaRepository = mangaRepository;
         this.authorRepository = authorRepository;
+        this.apiService = apiService;
     }
 
     @Override
@@ -42,7 +46,14 @@ public class MangaServiceImpl implements MangaService{
 
     @Override
     public void updateAllManga() {
-
+        List<Manga> mangaList = mangaRepository.findAll();
+        mangaList.forEach(manga -> {
+            MangaWrapper updatedManga = apiService.getManga(manga.getMalId());
+            manga.setChapters(updatedManga.getChapters());
+            manga.setVolumes(updatedManga.getVolumes());
+            manga.setStatus(MangaStatus.fromCode(updatedManga.getStatus()));
+            mangaRepository.save(manga);
+        });
     }
 
     @Override
@@ -59,7 +70,14 @@ public class MangaServiceImpl implements MangaService{
 
     @Override
     public void updateCollection(MangaCollectionUpdate collectionUpdate) {
-
+        Optional<Manga> optionalManga = mangaRepository.findById(collectionUpdate.getMalId());
+        if (optionalManga.isPresent()) {
+            Manga manga = optionalManga.get();
+            manga.setDigitalCopy(collectionUpdate.isDigitalCopy());
+            manga.setVolumesOwned(collectionUpdate.getVolumesOwned());
+            manga.setVolumesAvailable(collectionUpdate.getVolumesAvailable());
+            mangaRepository.save(manga);
+        }
     }
 
     @Override
