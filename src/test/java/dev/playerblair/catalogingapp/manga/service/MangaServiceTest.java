@@ -1,5 +1,6 @@
 package dev.playerblair.catalogingapp.manga.service;
 
+import dev.playerblair.catalogingapp.api.service.ApiService;
 import dev.playerblair.catalogingapp.api.wrapper.GenreWrapper;
 import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
@@ -29,6 +30,9 @@ public class MangaServiceTest {
 
     @Mock
     private AuthorRepository authorRepository;
+
+    @Mock
+    private ApiService apiService;
 
     @InjectMocks
     private MangaServiceImpl mangaService;
@@ -92,7 +96,70 @@ public class MangaServiceTest {
         verify(mangaRepository).deleteById(1L);
     }
 
-    //updateAllMangaTest
+    @Test
+    public void whenUpdateAllMangaIsCalled_updateManga() {
+        Manga manga1 = Manga.builder()
+                .malId(1L)
+                .title("Manga1")
+                .type(MangaType.MANGA)
+                .authors(List.of(new Author()))
+                .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
+                .status(MangaStatus.FINISHED)
+                .build();
+
+        Manga manga2 = Manga.builder()
+                .malId(2L)
+                .title("Manga2")
+                .type(MangaType.MANGA)
+                .authors(List.of(new Author()))
+                .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
+                .status(MangaStatus.FINISHED)
+                .build();
+
+        List<Manga> mangaList = List.of(manga1, manga2);
+
+        MangaWrapper mangaWrapper1 = new MangaWrapper(
+                1L,
+                "Manga1",
+                "Manga",
+                100,
+                10,
+                "Finished",
+                List.of(new Author(1L, "Author", "www.example.com")),
+                List.of(new GenreWrapper("Action")),
+                "www.example.com"
+        );
+
+        MangaWrapper mangaWrapper2 = new MangaWrapper(
+                2L,
+                "Manga2",
+                "Manga",
+                20,
+                2,
+                "Finished",
+                List.of(new Author(2L, "Author", "www.example.com")),
+                List.of(new GenreWrapper("Action")),
+                "www.example.com"
+        );
+
+        given(mangaRepository.findAll()).willReturn(mangaList);
+        given(apiService.getManga(manga1.getMalId())).willReturn(mangaWrapper1);
+        given(apiService.getManga(manga2.getMalId())).willReturn(mangaWrapper2);
+
+        mangaService.updateAllManga();
+
+        verify(mangaRepository).save(argThat(manga ->
+                manga.getChapters() == mangaWrapper1.getChapters() &&
+                manga.getVolumes() == mangaWrapper1.getVolumes() &&
+                manga.getStatus() == MangaStatus.fromCode(mangaWrapper1.getStatus())
+        ));
+
+        verify(mangaRepository).save(argThat(manga ->
+                manga.getChapters() == mangaWrapper2.getChapters() &&
+                manga.getVolumes() == mangaWrapper2.getVolumes() &&
+                manga.getStatus() == MangaStatus.fromCode(mangaWrapper2.getStatus())
+        ));
+    }
 
     @Test
     public void givenMangaProgressUpdate_whenUpdateProgressIsCalled_updateProgress() {
