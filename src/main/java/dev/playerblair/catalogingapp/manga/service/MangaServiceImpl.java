@@ -9,8 +9,7 @@ import dev.playerblair.catalogingapp.manga.repository.AuthorRepository;
 import dev.playerblair.catalogingapp.manga.repository.MangaRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class MangaServiceImpl implements MangaService{
@@ -20,6 +19,8 @@ public class MangaServiceImpl implements MangaService{
 
     private final ApiService apiService;
 
+    private Map<Long, MangaWrapper> currentSearchResults = new HashMap<>();
+
     public MangaServiceImpl(MangaRepository mangaRepository, AuthorRepository authorRepository, ApiService apiService) {
         this.mangaRepository = mangaRepository;
         this.authorRepository = authorRepository;
@@ -27,14 +28,20 @@ public class MangaServiceImpl implements MangaService{
     }
 
     @Override
-    public void saveManga(MangaWrapper manga) {
-        Manga mangaToSave = generateManga(manga);
-        mangaToSave.getAuthors().forEach(authorRepository::save);
-        mangaRepository.save(mangaToSave);
+    public List<Manga> listManga() {
+        return mangaRepository.findAll();
     }
 
     @Override
-    public void saveManga(Manga manga) {
+    public List<MangaWrapper> searchManga(String query) {
+        List<MangaWrapper> results = apiService.searchManga(query);
+        storeSearchResults(results);
+        return results;
+    }
+
+    @Override
+    public void addManga(Long id) {
+        Manga manga = generateManga(currentSearchResults.get(id));
         manga.getAuthors().forEach(authorRepository::save);
         mangaRepository.save(manga);
     }
@@ -131,5 +138,14 @@ public class MangaServiceImpl implements MangaService{
                 .genres(genres)
                 .url(mangaWrapper.getUrl())
                 .build();
+    }
+
+    public void storeSearchResults(List<MangaWrapper> results) {
+        currentSearchResults.clear();
+
+        for (MangaWrapper manga: results) {
+            currentSearchResults.put(manga.getMalId(), manga);
+            System.out.println(manga);
+        }
     }
 }
