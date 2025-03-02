@@ -1,5 +1,6 @@
 package dev.playerblair.catalogingapp.api.wrapper;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.playerblair.catalogingapp.manga.model.Author;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import java.util.List;
 @Builder
 public class MangaWrapper {
 
+    @JsonProperty("mal_id")
     private Long malId;
     private String title;
     private String type;
