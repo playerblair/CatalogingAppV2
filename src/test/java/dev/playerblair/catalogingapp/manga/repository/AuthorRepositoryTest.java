@@ -6,15 +6,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-@ExtendWith(SpringExtension.class)
 @DataMongoTest
+@Testcontainers
 public class AuthorRepositoryTest {
+
+    @Container
+    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:latest");
+
+    @DynamicPropertySource
+    public static void setProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    }
 
     @Autowired
     private AuthorRepository authorRepository;
@@ -23,6 +37,8 @@ public class AuthorRepositoryTest {
 
     @BeforeEach
     public void setUp() {
+        authorRepository.deleteAll();
+
         Author author1 = Author.builder()
                 .malId(1L)
                 .name("Author1")

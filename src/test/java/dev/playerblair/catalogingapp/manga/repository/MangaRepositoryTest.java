@@ -3,18 +3,29 @@ package dev.playerblair.catalogingapp.manga.repository;
 import dev.playerblair.catalogingapp.manga.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-@ExtendWith(SpringExtension.class)
 @DataMongoTest
+@Testcontainers
 public class MangaRepositoryTest {
+
+    @Container
+    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:latest");
+
+    @DynamicPropertySource
+    public static void setProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    }
 
     @Autowired
     private MangaRepository mangaRepository;
@@ -24,6 +35,9 @@ public class MangaRepositoryTest {
 
     @BeforeEach
     public void setUp() {
+        authorRepository.deleteAll();
+        mangaRepository.deleteAll();
+
         Author author1 = Author.builder()
                 .malId(1L)
                 .name("Author1")
