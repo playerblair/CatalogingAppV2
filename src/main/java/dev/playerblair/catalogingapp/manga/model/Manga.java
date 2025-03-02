@@ -1,5 +1,6 @@
 package dev.playerblair.catalogingapp.manga.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.util.List;
 public class Manga {
 
     @Id
+    @JsonProperty("mal_id")
     private Long malId;
     private String title;
     private MangaType type;

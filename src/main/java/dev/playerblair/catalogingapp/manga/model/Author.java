@@ -1,5 +1,6 @@
 package dev.playerblair.catalogingapp.manga.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import org.springframework.data.annotation.Id;
 public class Author {
 
     @Id
+    @JsonProperty("mal_id")
     private Long malId;
     private String name;
     private String url;
