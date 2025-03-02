@@ -13,4 +13,5 @@ public class MangaProgressUpdate {
     private String progress;
     private int chaptersRead;
     private int volumesRead;
+    private int rating;
 }
