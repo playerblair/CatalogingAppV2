@@ -89,7 +89,7 @@ public class ApiServiceTest {
     }
 
     @Test
-    public void givenTitle_whenSearchMangaIsCalled_returnSearchResponseMangaWrapper() {
+    public void givenTitle_whenSearchMangaIsCalled_returnSearchResults() {
         String query = "Example";
 
         SearchResponseWrapper<MangaWrapper> searchResponse = new SearchResponseWrapper<>();
