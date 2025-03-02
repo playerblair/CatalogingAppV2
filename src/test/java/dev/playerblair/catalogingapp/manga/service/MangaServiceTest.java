@@ -13,14 +13,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MangaServiceTest {
@@ -36,6 +39,77 @@ public class MangaServiceTest {
 
     @InjectMocks
     private MangaServiceImpl mangaService;
+
+    @Mock
+    private Map<Long, MangaWrapper> mockSearchResults;
+
+    @Test
+    public void whenListMangaIsCalled_returnManga() {
+        Manga manga1 = Manga.builder()
+                .malId(1L)
+                .title("Manga1")
+                .type(MangaType.MANGA)
+                .authors(List.of(new Author()))
+                .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
+                .status(MangaStatus.FINISHED)
+                .build();
+
+        Manga manga2 = Manga.builder()
+                .malId(2L)
+                .title("Manga2")
+                .type(MangaType.MANGA)
+                .authors(List.of(new Author()))
+                .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
+                .status(MangaStatus.FINISHED)
+                .build();
+
+        List<Manga> mangaList = List.of(manga1, manga2);
+
+        given(mangaRepository.findAll()).willReturn(mangaList);
+
+        List<Manga> manga = mangaService.listManga();
+
+        assertThat(manga).hasSize(2);
+        assertThat(manga.getFirst().getTitle()).isEqualTo("Manga1");
+    }
+
+    @Test
+    public void givenQuery_whenSearchMangaIsCalled_returnSearchResults() {
+        MangaWrapper mangaWrapper1 = new MangaWrapper(
+                1L,
+                "Manga1",
+                "Manga",
+                100,
+                10,
+                "Finished",
+                List.of(new Author(1L, "Author", "www.example.com")),
+                List.of(new GenreWrapper("Action")),
+                "www.example.com"
+        );
+
+        MangaWrapper mangaWrapper2 = new MangaWrapper(
+                2L,
+                "Manga2",
+                "Manga",
+                20,
+                2,
+                "Finished",
+                List.of(new Author(2L, "Author", "www.example.com")),
+                List.of(new GenreWrapper("Action")),
+                "www.example.com"
+        );
+
+        List<MangaWrapper> manga = List.of(mangaWrapper1, mangaWrapper2);
+
+        String query = "Manga";
+
+        given(apiService.searchManga(query)).willReturn(manga);
+
+        List<MangaWrapper> results = mangaService.searchManga(query);
+
+        assertThat(results).hasSize(2);
+        assertThat(results.getFirst().getTitle()).isEqualTo("Manga1");
+    }
 
     @Test
     public void givenMangaWrapperObject_whenGenerateMangaIsCalled_returnManga() {
@@ -57,7 +131,7 @@ public class MangaServiceTest {
     }
 
     @Test
-    public void givenMangaWrapperObject_whenSaveMangaIsCalled_saveManga() {
+    public void givenId_whenAddMangaIsCalled_saveManga() {
         MangaWrapper mangaWrapper = new MangaWrapper(
                 1L,
                 "Example",
@@ -70,21 +144,12 @@ public class MangaServiceTest {
                 "www.example.com"
         );
 
-        mangaService.saveManga(mangaWrapper);
+        Long id = 1L;
 
-        verify(authorRepository).save(argThat(author -> author.getName().equals("Author")));
-        verify(mangaRepository).save(argThat(manga -> manga.getTitle().equals("Example")));
-    }
+        when(mockSearchResults.get(id)).thenReturn(mangaWrapper);
+        ReflectionTestUtils.setField(mangaService, "currentSearchResults", mockSearchResults);
 
-    @Test
-    public void givenManga_whenSaveMangaIsCalled_saveManga() {
-        Manga mangaToSave = Manga.builder()
-                .malId(1L)
-                .title("Example")
-                .authors(List.of(new Author(1L, "Author", "www.example.com")))
-                .build();
-
-        mangaService.saveManga(mangaToSave);
+        mangaService.addManga(id);
 
         verify(authorRepository).save(argThat(author -> author.getName().equals("Author")));
         verify(mangaRepository).save(argThat(manga -> manga.getTitle().equals("Example")));
@@ -167,6 +232,7 @@ public class MangaServiceTest {
                 1L,
                 "FINISHED",
                 100,
+                10,
                 10
         );
 
@@ -192,7 +258,7 @@ public class MangaServiceTest {
     }
 
     @Test
-    public void givenCollectionUpdate_whenFilterByGenresAND_returnFilterManga() {
+    public void givenCollectionUpdate_whenUpdateCollectionIsCalled_returnFilterManga() {
         MangaCollectionUpdate collectionUpdate = new MangaCollectionUpdate(
                 1L,
                 true,
