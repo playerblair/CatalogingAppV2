@@ -9,9 +9,11 @@ import java.util.List;
 
 public interface MangaService {
 
-    void saveManga(MangaWrapper manga);
+    List<Manga> listManga();
 
-    void saveManga(Manga manga);
+    List<MangaWrapper> searchManga(String query);
+
+    void addManga(Long id);
 
     void deleteManga(Long id);
 
