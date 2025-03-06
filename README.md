@@ -17,6 +17,9 @@ A backend for a manga cataloging application using Spring Boot and MongoDB. This
 - Docker
 - Git
 
+### How to use:
+I have not added a front end yet, so this can be tested using Postman or something similar.
+
 ### Endpoints
 #### GET "/manga/list"
 #### GET "/manga/search"
