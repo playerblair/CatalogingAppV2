@@ -3,6 +3,7 @@ package dev.playerblair.catalogingapp.manga.service;
 import dev.playerblair.catalogingapp.api.service.ApiService;
 import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
+import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
 import dev.playerblair.catalogingapp.manga.model.*;
 import dev.playerblair.catalogingapp.manga.repository.AuthorRepository;
@@ -80,7 +81,8 @@ public class MangaServiceImpl implements MangaService{
         Optional<Manga> optionalManga = mangaRepository.findById(collectionUpdate.getMalId());
         if (optionalManga.isPresent()) {
             Manga manga = optionalManga.get();
-            manga.setDigitalCopy(collectionUpdate.isDigitalCopy());
+            manga.setDigitalCollection(collectionUpdate.isDigitalCollection());
+            manga.setPhysicalCollection(collectionUpdate.isPhysicalCollection());
             manga.setVolumesOwned(collectionUpdate.getVolumesOwned());
             manga.setVolumesAvailable(collectionUpdate.getVolumesAvailable());
             mangaRepository.save(manga);
@@ -88,39 +90,8 @@ public class MangaServiceImpl implements MangaService{
     }
 
     @Override
-    public List<Manga> filterByTitle(String title) {
-        return mangaRepository.findByTitleLike(title);
-    }
-
-    @Override
-    public List<Manga> filterByGenresOR(List<String> genres) {
-        List<MangaGenre> genresList = genres.stream()
-                .map(MangaGenre::fromCode)
-                .toList();
-        return mangaRepository.findByGenresOR(genresList);
-    }
-
-    @Override
-    public List<Manga> filterByGenresAND(List<String> genres) {
-        List<MangaGenre> genresList = genres.stream()
-                .map(MangaGenre::fromCode)
-                .toList();
-        return mangaRepository.findByGenresAND(genresList);
-    }
-
-    @Override
-    public List<Manga> filterByAuthor(String author) {
-        return mangaRepository.findByAuthor(author);
-    }
-
-    @Override
-    public List<Manga> filterByStatus(String status) {
-        return mangaRepository.findByStatus(MangaStatus.fromCode(status));
-    }
-
-    @Override
-    public List<Manga> filterByProgress(String progress) {
-        return mangaRepository.findByProgress(MangaProgress.valueOf(progress));
+    public List<Manga> filterManga(MangaFilter filter) {
+        return mangaRepository.findByDynamicCriteria(filter);
     }
 
     public Manga generateManga(MangaWrapper mangaWrapper) {
@@ -145,7 +116,6 @@ public class MangaServiceImpl implements MangaService{
 
         for (MangaWrapper manga: results) {
             currentSearchResults.put(manga.getMalId(), manga);
-            System.out.println(manga);
         }
     }
 }

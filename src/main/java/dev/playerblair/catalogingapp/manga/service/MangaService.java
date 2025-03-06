@@ -2,6 +2,7 @@ package dev.playerblair.catalogingapp.manga.service;
 
 import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
+import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
 import dev.playerblair.catalogingapp.manga.model.Manga;
 
@@ -23,15 +24,5 @@ public interface MangaService {
 
     void updateCollection(MangaCollectionUpdate collectionUpdate);
 
-    List<Manga> filterByTitle(String title);
-
-    List<Manga> filterByGenresOR(List<String> genres);
-
-    List<Manga> filterByGenresAND(List<String> genres);
-
-    List<Manga> filterByAuthor(String author);
-
-    List<Manga> filterByStatus(String status);
-
-    List<Manga> filterByProgress(String progress);
+    List<Manga> filterManga(MangaFilter filter);
 }

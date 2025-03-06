@@ -2,6 +2,7 @@ package dev.playerblair.catalogingapp.manga.controller;
 
 import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
+import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
 import dev.playerblair.catalogingapp.manga.model.Manga;
 import dev.playerblair.catalogingapp.manga.service.MangaService;
@@ -49,5 +50,11 @@ public class MangaController {
     public ResponseEntity<Void> updateCollection(@RequestBody MangaCollectionUpdate collectionUpdate) {
         mangaService.updateCollection(collectionUpdate);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/list/filter")
+    public ResponseEntity<List<Manga>> filterManga(@RequestBody MangaFilter filter) {
+        List<Manga> manga = mangaService.filterManga(filter);
+        return ResponseEntity.status(HttpStatus.OK).body(manga);
     }
 }
