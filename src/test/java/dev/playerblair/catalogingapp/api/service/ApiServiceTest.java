@@ -48,13 +48,14 @@ public class ApiServiceTest {
 
     private ApiServiceImpl apiService;
 
-    private List<MangaWrapper> manga;
+    private MangaWrapper mangaWrapper1;
+    private MangaWrapper mangaWrapper2;
 
     @BeforeEach
     public void setUp() {
-        MangaWrapper mangaWrapper1 = new MangaWrapper(
-                2L,
-                "Example1",
+        mangaWrapper1 = new MangaWrapper(
+                1L,
+                "Test Manga 1",
                 "Manga",
                 100,
                 10,
@@ -64,19 +65,17 @@ public class ApiServiceTest {
                 "www.example.com"
         );
 
-        MangaWrapper mangaWrapper2 = new MangaWrapper(
+        mangaWrapper2 = new MangaWrapper(
                 2L,
-                "Example2",
+                "Test Manga 2",
                 "Manga",
                 100,
                 10,
                 "Finished",
                 List.of(new Author()),
-                List.of(new GenreWrapper("Action")),
+                List.of(new GenreWrapper("Romance")),
                 "www.example.com"
         );
-
-        manga = List.of(mangaWrapper1, mangaWrapper2);
 
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
@@ -90,10 +89,10 @@ public class ApiServiceTest {
 
     @Test
     public void givenTitle_whenSearchMangaIsCalled_returnSearchResults() {
-        String query = "Example";
+        String query = "Test Manga";
 
         SearchResponseWrapper<MangaWrapper> searchResponse = new SearchResponseWrapper<>();
-        searchResponse.setData(manga);
+        searchResponse.setData(List.of(mangaWrapper1, mangaWrapper2));
 
         when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class)))
                 .thenReturn(Mono.just(searchResponse));
@@ -102,8 +101,8 @@ public class ApiServiceTest {
 
         assertThat(results).isNotNull();
         assertThat(results.size()).isEqualTo(2);
-        assertThat(results.getFirst().getTitle()).isEqualTo("Example1");
-        assertThat(results.get(1).getTitle()).isEqualTo("Example2");
+        assertThat(results.get(0).getTitle()).isEqualTo("Test Manga 1");
+        assertThat(results.get(1).getTitle()).isEqualTo("Test Manga 2");
 
         verify(webClient).get();
         verify(requestHeadersSpec).retrieve();
@@ -114,7 +113,7 @@ public class ApiServiceTest {
         Long id = 1L;
 
         GetResponseWrapper<MangaWrapper> getResponse = new GetResponseWrapper<>();
-        getResponse.setData(manga.getFirst());
+        getResponse.setData(mangaWrapper1);
 
         when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class)))
                 .thenReturn(Mono.just(getResponse));
@@ -122,7 +121,7 @@ public class ApiServiceTest {
         MangaWrapper mangaWrapper = apiService.getManga(id);
 
         assertThat(mangaWrapper).isNotNull();
-        assertThat(mangaWrapper.getTitle()).isEqualTo("Example1");
+        assertThat(mangaWrapper.getTitle()).isEqualTo("Test Manga 1");
 
         verify(webClient).get();
         verify(requestHeadersSpec).retrieve();
