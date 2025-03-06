@@ -16,7 +16,6 @@ import java.util.List;
 public class Manga {
 
     @Id
-    @JsonProperty("mal_id")
     private Long malId;
     private String title;
     private MangaType type;
@@ -32,7 +31,11 @@ public class Manga {
     private int volumesRead;
     private int rating;
 
-    private boolean digitalCopy;
-    private int volumesOwned;
+    private boolean digitalCollection;
+    private boolean physicalCollection;
     private int volumesAvailable;
+    private int volumesOwned;
+    private List<Integer> volumesAcquired;
+    private String volumesEdition;
+
 }
