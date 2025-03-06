@@ -14,7 +14,7 @@ import org.springframework.data.annotation.Id;
 public class Author {
 
     @Id
-    @JsonProperty("mal_id")
+    @JsonProperty(value = "mal_id", access = JsonProperty.Access.WRITE_ONLY)
     private Long malId;
     private String name;
     private String url;
