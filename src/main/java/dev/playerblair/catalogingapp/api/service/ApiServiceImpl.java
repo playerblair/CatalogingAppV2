@@ -15,14 +15,14 @@ public class ApiServiceImpl implements ApiService {
     private final WebClient webClient;
 
     public ApiServiceImpl(WebClient.Builder builder) {
-        this.webClient = builder.baseUrl("https://api.jikan.moe").build();
+        this.webClient = builder.baseUrl("https://api.jikan.moe/v4").build();
     }
 
     @Override
     public List<MangaWrapper> searchManga(String query) {
         SearchResponseWrapper<MangaWrapper> response = this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/v4/manga")
+                        .path("/manga")
                         .queryParam("q", query)
                         .build())
                 .retrieve()
@@ -35,7 +35,7 @@ public class ApiServiceImpl implements ApiService {
     public MangaWrapper getManga(Long id) {
         GetResponseWrapper<MangaWrapper> response = this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/v4/manga/" + id)
+                        .path("/manga/" + id)
                         .build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<GetResponseWrapper<MangaWrapper>>() {})
