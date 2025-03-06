@@ -5,6 +5,7 @@ import dev.playerblair.catalogingapp.api.service.ApiService;
 import dev.playerblair.catalogingapp.api.wrapper.GenreWrapper;
 import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
+import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
 import dev.playerblair.catalogingapp.manga.model.*;
 import dev.playerblair.catalogingapp.manga.repository.AuthorRepository;
@@ -12,24 +13,19 @@ import dev.playerblair.catalogingapp.manga.repository.MangaRepository;
 import dev.playerblair.catalogingapp.manga.service.MangaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MangaController.class)
 @AutoConfigureMockMvc
@@ -162,8 +158,11 @@ public class MangaControllerTest {
         MangaCollectionUpdate collectionUpdate = new MangaCollectionUpdate(
                 1L,
                 true,
+                true,
+                3,
                 1,
-                3
+                List.of(1),
+                "Paperback"
         );
 
         String requestJson = objectMapper.writeValueAsString(collectionUpdate);
@@ -172,6 +171,24 @@ public class MangaControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void givenFilter_whenFilterMangaIsCalled_returnFilterManga() throws Exception {
+        MangaFilter filter = new MangaFilter();
+        filter.setQuery("Manga1");
+
+        given(mangaService.filterManga(filter)).willReturn(List.of(mangaList.getFirst()));
+
+        String requestJson = objectMapper.writeValueAsString(filter);
+
+        String jsonResponse = objectMapper.writeValueAsString(List.of(mangaList.getFirst()));
+
+        mockMvc.perform(get("/manga/list/filter")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(content().json(jsonResponse));
     }
 
 }

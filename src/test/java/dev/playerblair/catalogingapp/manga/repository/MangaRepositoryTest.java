@@ -1,5 +1,6 @@
 package dev.playerblair.catalogingapp.manga.repository;
 
+import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,12 +41,12 @@ public class MangaRepositoryTest {
 
         Author author1 = Author.builder()
                 .malId(1L)
-                .name("Author1")
+                .name("Test Author 1")
                 .build();
 
         Author author2 = Author.builder()
                 .malId(2L)
-                .name("Author2")
+                .name("Test Author 2")
                 .build();
 
         List<Author> authors = List.of(author1, author2);
@@ -53,39 +54,39 @@ public class MangaRepositoryTest {
 
         Manga manga1 = Manga.builder()
                 .malId(1L)
-                .title("Manga1")
+                .title("Test Manga 1")
                 .type(MangaType.MANGA)
                 .authors(List.of(author1))
                 .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
                 .status(MangaStatus.FINISHED)
                 .progress(MangaProgress.FINISHED)
-                .digitalCopy(true)
+                .digitalCollection(true)
                 .volumesOwned(2)
                 .volumes(2)
                 .build();
 
         Manga manga2 = Manga.builder()
                 .malId(2L)
-                .title("Manga1: Rebirth")
+                .title("Test Manga 1: Rebirth")
                 .type(MangaType.MANGA)
                 .authors(List.of(author1))
                 .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
                 .status(MangaStatus.DISCONTINUED)
                 .progress(MangaProgress.FINISHED)
-                .digitalCopy(true)
+                .digitalCollection(true)
                 .volumesOwned(0)
                 .volumes(2)
                 .build();
 
         Manga manga3 = Manga.builder()
                 .malId(3L)
-                .title("Manga3")
+                .title("Test Manga 2")
                 .type(MangaType.MANHUA)
                 .authors(List.of(author2))
                 .genres(List.of(MangaGenre.ACTION))
                 .status(MangaStatus.PUBLISHING)
                 .progress(MangaProgress.READING)
-                .digitalCopy(true)
+                .digitalCollection(true)
                 .volumesOwned(0)
                 .volumes(0)
                 .build();
@@ -146,49 +147,58 @@ public class MangaRepositoryTest {
     }
 
     @Test
-    public void givenTitle_whenFindByTitleIsCalled_returnFilteredManga() {
-        assertThat(mangaRepository.findByTitleLike("Manga1")).hasSize(2);
+    public void givenTitle_whenFindByDynamicCriteriaIsCalled_returnFilteredManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setQuery("Test Manga 1");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).hasSize(2);
     }
 
     @Test
-    public void givenGenres_whenFindByGenresORIsCalled_returnFilteredManga() {
-        assertThat(mangaRepository.findByGenresOR(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION)))
-                .hasSize(3);
+    public void givenGenres_whenFindByDynamicCriteriaIsCalled_returnFilteredManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setGenres(List.of("ROMANCE", "ACTION"));
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).hasSize(2);
     }
 
     @Test
-    public void givenGenres_whenFindByGenresANDIsCalled_returnFilteredManga() {
-        assertThat(mangaRepository.findByGenresAND(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION)))
-                .hasSize(2);
+    public void givenExistingAuthor_whenFindByDynamicCriteriaIsCalled_returnFilteredManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setAuthor("Test Author 1");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).hasSize(2);
     }
 
     @Test
-    public void givenExistingAuthor_whenFindByAuthor_returnFilteredManga() {
-        assertThat(mangaRepository.findByAuthor("Author1")).hasSize(2);
+    public void givenNonExistingAuthor_whenFindByDynamicCriteriaIsCalled_returnNothing() {
+        MangaFilter filter = new MangaFilter();
+        filter.setAuthor("Donkey");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).isEmpty();
     }
 
     @Test
-    public void givenNonExistingAuthor_whenFindByAuthorIsCalled_returnNothing() {
-        assertThat(mangaRepository.findByAuthor("Donkey")).isEmpty();
+    public void givenStatus_whenFindByDynamicCriteriaIsCalled_returnFilterManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setStatus("FINISHED");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).hasSize(1);
     }
 
     @Test
-    public void givenStatus_whenFindByStatusIsCalled_returnFilterManga() {
-        assertThat(mangaRepository.findByStatus(MangaStatus.FINISHED)).hasSize(1);
+    public void givenNoMangaWithStatus_whenFindByDynamicCriteriaIsCalled_returnFilterManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setStatus("ON_HIATUS");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).isEmpty();
     }
 
     @Test
-    public void givenNoMangaWithStatus_whenFindByStatusIsCalled_returnFilterManga() {
-        assertThat(mangaRepository.findByStatus(MangaStatus.ON_HIATUS)).isEmpty();
+    public void givenProgress_whenFindByDynamicCriteriaIsCalled_returnFilterManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setProgress("FINISHED");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).hasSize(2);
     }
 
     @Test
-    public void givenProgress_whenFindByProgressIsCalled_returnFilterManga() {
-        assertThat(mangaRepository.findByProgress(MangaProgress.FINISHED)).hasSize(2);
-    }
-
-    @Test
-    public void givenNoMangaWithProgress_whenFindByProgressIsCalled_returnFilterManga() {
-        assertThat(mangaRepository.findByProgress(MangaProgress.DROPPED)).isEmpty();
+    public void givenNoMangaWithProgress_whenFindByDynamicCriteriaIsCalled_returnFilterManga() {
+        MangaFilter filter = new MangaFilter();
+        filter.setProgress("DROPPED");
+        assertThat(mangaRepository.findByDynamicCriteria(filter)).isEmpty();
     }
 }
