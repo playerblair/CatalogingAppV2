@@ -72,6 +72,7 @@ public class MangaServiceImpl implements MangaService{
             manga.setProgress(MangaProgress.valueOf(progressUpdate.getProgress()));
             manga.setChaptersRead(progressUpdate.getChaptersRead());
             manga.setVolumesRead(progressUpdate.getVolumesRead());
+            manga.setRating(progressUpdate.getRating());
             mangaRepository.save(manga);
         }
     }
@@ -83,8 +84,10 @@ public class MangaServiceImpl implements MangaService{
             Manga manga = optionalManga.get();
             manga.setDigitalCollection(collectionUpdate.isDigitalCollection());
             manga.setPhysicalCollection(collectionUpdate.isPhysicalCollection());
-            manga.setVolumesOwned(collectionUpdate.getVolumesOwned());
             manga.setVolumesAvailable(collectionUpdate.getVolumesAvailable());
+            manga.setVolumesOwned(collectionUpdate.getVolumesOwned());
+            manga.setVolumesAcquired(collectionUpdate.getVolumesAcquired());
+            manga.setVolumesEdition(collectionUpdate.getVolumesEdition());
             mangaRepository.save(manga);
         }
     }
