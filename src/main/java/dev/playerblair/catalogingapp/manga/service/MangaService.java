@@ -14,15 +14,15 @@ public interface MangaService {
 
     List<MangaWrapper> searchManga(String query);
 
-    void addManga(Long id);
+    Manga addManga(Long id);
 
-    void deleteManga(Long id);
+    Manga deleteManga(Long id);
 
-    void updateAllManga();
+    void updateAllMangaInformation();
 
-    void updateProgress(MangaProgressUpdate progressUpdate);
+    Manga updateProgress(MangaProgressUpdate progressUpdate);
 
-    void updateCollection(MangaCollectionUpdate collectionUpdate);
+    Manga updateCollection(MangaCollectionUpdate collectionUpdate);
 
     List<Manga> filterManga(MangaFilter filter);
 }
