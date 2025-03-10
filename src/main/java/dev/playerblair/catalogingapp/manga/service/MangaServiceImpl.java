@@ -5,6 +5,8 @@ import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
 import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
+import dev.playerblair.catalogingapp.manga.exception.MangaNotFoundException;
+import dev.playerblair.catalogingapp.manga.exception.MangaSearchResultNotFoundException;
 import dev.playerblair.catalogingapp.manga.model.*;
 import dev.playerblair.catalogingapp.manga.repository.AuthorRepository;
 import dev.playerblair.catalogingapp.manga.repository.MangaRepository;
@@ -20,7 +22,7 @@ public class MangaServiceImpl implements MangaService{
 
     private final ApiService apiService;
 
-    private Map<Long, MangaWrapper> currentSearchResults = new HashMap<>();
+    private final Map<Long, MangaWrapper> currentSearchResults = new HashMap<>();
 
     public MangaServiceImpl(MangaRepository mangaRepository, AuthorRepository authorRepository, ApiService apiService) {
         this.mangaRepository = mangaRepository;
@@ -41,19 +43,29 @@ public class MangaServiceImpl implements MangaService{
     }
 
     @Override
-    public void addManga(Long id) {
+    public Manga addManga(Long id) {
+        MangaWrapper mangaWrapper = currentSearchResults.get(id);
+        if (mangaWrapper == null) {
+            throw new MangaSearchResultNotFoundException(id);
+        }
         Manga manga = generateManga(currentSearchResults.get(id));
         manga.getAuthors().forEach(authorRepository::save);
-        mangaRepository.save(manga);
+        return mangaRepository.save(manga);
     }
 
     @Override
-    public void deleteManga(Long id) {
-        mangaRepository.deleteById(id);
+    public Manga deleteManga(Long id) {
+        Optional<Manga> optionalManga = mangaRepository.findById(id);
+        if (optionalManga.isPresent()) {
+            Manga manga = optionalManga.get();
+            mangaRepository.delete(manga);
+            return manga;
+        }
+       throw new MangaNotFoundException(id);
     }
 
     @Override
-    public void updateAllManga() {
+    public void updateAllMangaInformation() {
         List<Manga> mangaList = mangaRepository.findAll();
         mangaList.forEach(manga -> {
             MangaWrapper updatedManga = apiService.getManga(manga.getMalId());
@@ -65,7 +77,7 @@ public class MangaServiceImpl implements MangaService{
     }
 
     @Override
-    public void updateProgress(MangaProgressUpdate progressUpdate) {
+    public Manga updateProgress(MangaProgressUpdate progressUpdate) {
         Optional<Manga> optionalManga = mangaRepository.findById(progressUpdate.getMalId());
         if (optionalManga.isPresent()) {
             Manga manga = optionalManga.get();
@@ -73,12 +85,13 @@ public class MangaServiceImpl implements MangaService{
             manga.setChaptersRead(progressUpdate.getChaptersRead());
             manga.setVolumesRead(progressUpdate.getVolumesRead());
             manga.setRating(progressUpdate.getRating());
-            mangaRepository.save(manga);
+            return mangaRepository.save(manga);
         }
+        throw new MangaNotFoundException(progressUpdate.getMalId());
     }
 
     @Override
-    public void updateCollection(MangaCollectionUpdate collectionUpdate) {
+    public Manga updateCollection(MangaCollectionUpdate collectionUpdate) {
         Optional<Manga> optionalManga = mangaRepository.findById(collectionUpdate.getMalId());
         if (optionalManga.isPresent()) {
             Manga manga = optionalManga.get();
@@ -88,8 +101,9 @@ public class MangaServiceImpl implements MangaService{
             manga.setVolumesOwned(collectionUpdate.getVolumesOwned());
             manga.setVolumesAcquired(collectionUpdate.getVolumesAcquired());
             manga.setVolumesEdition(collectionUpdate.getVolumesEdition());
-            mangaRepository.save(manga);
+            return mangaRepository.save(manga);
         }
+        throw new MangaNotFoundException(collectionUpdate.getMalId());
     }
 
     @Override
