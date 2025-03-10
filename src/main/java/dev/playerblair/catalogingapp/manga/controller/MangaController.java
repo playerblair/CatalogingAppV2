@@ -35,26 +35,39 @@ public class MangaController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Void> addManga(@RequestParam Long id) {
-        mangaService.addManga(id);
+    public ResponseEntity<Manga> addManga(@RequestParam Long id) {
+        Manga addedManga = mangaService.addManga(id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(addedManga);
+    }
+
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Manga> deleteManga(@RequestParam Long id) {
+        Manga deletedManga = mangaService.deleteManga(id);
+        return ResponseEntity.status(HttpStatus.OK).body(deletedManga);
+    }
+
+    @PatchMapping("/update-info")
+    public ResponseEntity<Void> updateInfo() {
+        mangaService.updateAllMangaInformation();
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/update-progress")
-    public ResponseEntity<Void> updateProgress(@RequestBody MangaProgressUpdate progressUpdate) {
-        mangaService.updateProgress(progressUpdate);
-        return ResponseEntity.ok().build();
+    @PatchMapping("/update-progress")
+    public ResponseEntity<Manga> updateProgress(@RequestBody MangaProgressUpdate progressUpdate) {
+        Manga updatedManga = mangaService.updateProgress(progressUpdate);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedManga);
     }
 
-    @PutMapping("/update-collection")
-    public ResponseEntity<Void> updateCollection(@RequestBody MangaCollectionUpdate collectionUpdate) {
-        mangaService.updateCollection(collectionUpdate);
-        return ResponseEntity.ok().build();
+    @PatchMapping("/update-collection")
+    public ResponseEntity<Manga> updateCollection(@RequestBody MangaCollectionUpdate collectionUpdate) {
+        Manga updatedManga = mangaService.updateCollection(collectionUpdate);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedManga);
     }
 
     @GetMapping("/list/filter")
     public ResponseEntity<List<Manga>> filterManga(@RequestBody MangaFilter filter) {
-        List<Manga> manga = mangaService.filterManga(filter);
-        return ResponseEntity.status(HttpStatus.OK).body(manga);
+        List<Manga> filteredManga = mangaService.filterManga(filter);
+        return ResponseEntity.status(HttpStatus.OK).body(filteredManga);
     }
 }
