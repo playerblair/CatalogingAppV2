@@ -45,9 +45,6 @@ public class MangaServiceTest {
     @Mock
     private Map<Long, MangaWrapper> mockSearchResults;
 
-    private Author author1;
-    private Author author2;
-
     private Manga manga1;
     private Manga manga2;
 
@@ -56,12 +53,12 @@ public class MangaServiceTest {
 
     @BeforeEach
     public void setUp() {
-        author1 = Author.builder()
+        Author author1 = Author.builder()
                 .malId(1L)
                 .name("Test Author 1")
                 .build();
 
-        author2 = Author.builder()
+        Author author2 = Author.builder()
                 .malId(2L)
                 .name("Test Author 2")
                 .build();
@@ -128,7 +125,7 @@ public class MangaServiceTest {
 
         String query = "Manga";
 
-        given(apiService.searchManga(query)).willReturn(manga);
+        when(apiService.searchManga(query)).thenReturn(manga);
 
         List<MangaWrapper> results = mangaService.searchManga(query);
 
@@ -160,19 +157,22 @@ public class MangaServiceTest {
 
     @Test
     public void givenMangaId_whenDeleteMangaIsCalled_deleteManga() {
-        mangaService.deleteManga(1L);
-        verify(mangaRepository).deleteById(1L);
+        Long id = 1L;
+
+        when(mangaRepository.findById(id)).thenReturn(Optional.of(manga1));
+        mangaService.deleteManga(id);
+        verify(mangaRepository).delete(manga1);
     }
 
     @Test
-    public void whenUpdateAllMangaIsCalled_updateManga() {
+    public void whenUpdateAllMangaInformationIsCalled_updateManga() {
         List<Manga> mangaList = List.of(manga1, manga2);
 
         given(mangaRepository.findAll()).willReturn(mangaList);
         given(apiService.getManga(manga1.getMalId())).willReturn(mangaWrapper1);
         given(apiService.getManga(manga2.getMalId())).willReturn(mangaWrapper2);
 
-        mangaService.updateAllManga();
+        mangaService.updateAllMangaInformation();
 
         verify(mangaRepository, times(2)).save(any(Manga.class));
     }
@@ -187,7 +187,7 @@ public class MangaServiceTest {
                 10
         );
 
-        given(mangaRepository.findById(1L)).willReturn(Optional.of(manga1));
+        when(mangaRepository.findById(1L)).thenReturn(Optional.of(manga1));
 
         mangaService.updateProgress(progressUpdate);
 
