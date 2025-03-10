@@ -22,8 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -49,11 +48,12 @@ public class MangaControllerTest {
     @MockitoBean
     public MangaService mangaService;
 
-    private List<Manga> mangaList;
+    private Manga manga1;
+    private Manga manga2;
 
     @BeforeEach
     public void setUp() {
-        Manga manga1 = Manga.builder()
+        manga1 = Manga.builder()
                 .malId(1L)
                 .title("Manga1")
                 .type(MangaType.MANGA)
@@ -62,7 +62,7 @@ public class MangaControllerTest {
                 .status(MangaStatus.FINISHED)
                 .build();
 
-        Manga manga2 = Manga.builder()
+        manga2 = Manga.builder()
                 .malId(2L)
                 .title("Manga2")
                 .type(MangaType.MANGA)
@@ -70,13 +70,12 @@ public class MangaControllerTest {
                 .genres(List.of(MangaGenre.ROMANCE, MangaGenre.ACTION))
                 .status(MangaStatus.FINISHED)
                 .build();
-
-        mangaList = List.of(manga1, manga2);
     }
 
     @Test
     public void whenListMangaIsCalled_returnManga() throws Exception {
-        given(mangaService.listManga()).willReturn(mangaList);
+        List<Manga> mangaList = List.of(manga1, manga2);
+        when(mangaService.listManga()).thenReturn(mangaList);
 
         String jsonResponse = objectMapper.writeValueAsString(mangaList);
 
@@ -116,7 +115,7 @@ public class MangaControllerTest {
         String query = "Manga";
         String jsonResponse = objectMapper.writeValueAsString(manga);
 
-        given(mangaService.searchManga(query)).willReturn(manga);
+        when(mangaService.searchManga(query)).thenReturn(manga);
 
         mockMvc.perform(get("/manga/search")
                 .param("query", query))
@@ -128,12 +127,18 @@ public class MangaControllerTest {
     public void givenId_whenAddMangaIsCalled_saveManga() throws Exception {
         Long id = 1L;
 
-        doNothing().when(mangaService).addManga(id);
+        when((mangaService).addManga(id)).thenReturn(manga1);
+
+        String jsonResponse = objectMapper.writeValueAsString(manga1);
 
         mockMvc.perform(post("/manga/add")
                 .param("id", String.valueOf(id)))
-                .andExpect(status().isOk());
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isCreated())
+                .andExpect(content().json(jsonResponse));
     }
+
+    // TODO add update info
 
     @Test
     public void givenProgressUpdate_whenUpdateProgressIsCalled_updateProgress() throws Exception {
@@ -145,12 +150,21 @@ public class MangaControllerTest {
                 10
         );
 
-        String requestJson = objectMapper.writeValueAsString(progressUpdate);
+        manga1.setProgress(MangaProgress.valueOf(progressUpdate.getProgress()));
+        manga1.setChaptersRead(progressUpdate.getChaptersRead());
+        manga1.setVolumesRead(progressUpdate.getVolumesRead());
+        manga1.setRating(progressUpdate.getRating());
 
-        mockMvc.perform(put("/manga/update-progress")
+        String requestJson = objectMapper.writeValueAsString(progressUpdate);
+        String jsonResponse = objectMapper.writeValueAsString(manga1);
+
+        when(mangaService.updateProgress(progressUpdate)).thenReturn(manga1);
+
+        mockMvc.perform(patch("/manga/update-progress")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().json(jsonResponse));
     }
 
     @Test
@@ -165,12 +179,23 @@ public class MangaControllerTest {
                 "Paperback"
         );
 
-        String requestJson = objectMapper.writeValueAsString(collectionUpdate);
+        manga1.setDigitalCollection(collectionUpdate.isDigitalCollection());
+        manga1.setPhysicalCollection(collectionUpdate.isPhysicalCollection());
+        manga1.setVolumesAvailable(collectionUpdate.getVolumesAvailable());
+        manga1.setVolumesOwned(collectionUpdate.getVolumesOwned());
+        manga1.setVolumesAcquired(collectionUpdate.getVolumesAcquired());
+        manga1.setVolumesEdition(collectionUpdate.getVolumesEdition());
 
-        mockMvc.perform(put("/manga/update-collection")
+        String requestJson = objectMapper.writeValueAsString(collectionUpdate);
+        String jsonResponse = objectMapper.writeValueAsString(manga1);
+
+        when(mangaService.updateCollection(collectionUpdate)).thenReturn(manga1);
+
+        mockMvc.perform(patch("/manga/update-collection")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().json(jsonResponse));
     }
 
     @Test
@@ -178,11 +203,11 @@ public class MangaControllerTest {
         MangaFilter filter = new MangaFilter();
         filter.setQuery("Manga1");
 
-        given(mangaService.filterManga(filter)).willReturn(List.of(mangaList.getFirst()));
+        when(mangaService.filterManga(filter)).thenReturn(List.of(manga1));
 
         String requestJson = objectMapper.writeValueAsString(filter);
 
-        String jsonResponse = objectMapper.writeValueAsString(List.of(mangaList.getFirst()));
+        String jsonResponse = objectMapper.writeValueAsString(List.of(manga1));
 
         mockMvc.perform(get("/manga/list/filter")
                 .contentType(MediaType.APPLICATION_JSON)
