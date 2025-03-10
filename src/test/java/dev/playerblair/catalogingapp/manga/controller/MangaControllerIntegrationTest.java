@@ -121,7 +121,9 @@ public class MangaControllerIntegrationTest {
 
         mockMvc.perform(post("/manga/add")
                 .param("id", "1"))
-                .andExpect(status().isOk());
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Monster"));
 
         assertThat(mangaRepository.findAll()).hasSize(3);
     }
@@ -138,10 +140,14 @@ public class MangaControllerIntegrationTest {
 
         String requestJson = objectMapper.writeValueAsString(progressUpdate);
 
-        mockMvc.perform(put("/manga/update-progress")
+        mockMvc.perform(patch("/manga/update-progress")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.progress").value("FINISHED"))
+                .andExpect(jsonPath("$.chaptersRead").value(100))
+                .andExpect(jsonPath("$.volumesRead").value(10))
+                .andExpect(jsonPath("$.rating").value(10));
 
         assertThat(mangaRepository.findById(10L).get().getProgress()).isEqualTo(MangaProgress.FINISHED);
     }
@@ -160,10 +166,16 @@ public class MangaControllerIntegrationTest {
 
         String requestJson = objectMapper.writeValueAsString(collectionUpdate);
 
-        mockMvc.perform(put("/manga/update-collection")
+        mockMvc.perform(patch("/manga/update-collection")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.digitalCollection").value(true))
+                .andExpect(jsonPath("$.physicalCollection").value(true))
+                .andExpect(jsonPath("$.volumesAvailable").value(3))
+                .andExpect(jsonPath("$.volumesOwned").value(1))
+                .andExpect(jsonPath("$.volumesAcquired[0]").value(1))
+                .andExpect(jsonPath("$.volumesEdition").value("Paperback"));
 
         assertThat(mangaRepository.findById(10L).get().isDigitalCollection()).isTrue();
     }
