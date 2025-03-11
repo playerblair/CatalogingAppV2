@@ -6,6 +6,8 @@ import dev.playerblair.catalogingapp.api.wrapper.MangaWrapper;
 import dev.playerblair.catalogingapp.manga.dto.MangaCollectionUpdate;
 import dev.playerblair.catalogingapp.manga.dto.MangaFilter;
 import dev.playerblair.catalogingapp.manga.dto.MangaProgressUpdate;
+import dev.playerblair.catalogingapp.manga.exception.MangaNotFoundException;
+import dev.playerblair.catalogingapp.manga.exception.MangaSearchResultNotFoundException;
 import dev.playerblair.catalogingapp.manga.model.*;
 import dev.playerblair.catalogingapp.manga.repository.AuthorRepository;
 import dev.playerblair.catalogingapp.manga.repository.MangaRepository;
@@ -22,9 +24,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -137,13 +139,14 @@ public class MangaServiceTest {
     @Test
     public void givenMangaWrapperObject_whenGenerateMangaIsCalled_returnManga() {
         Manga manga = mangaService.generateManga(mangaWrapper1);
+
         assertThat(manga.getMalId()).isEqualTo(1L);
         assertThat(manga.getAuthors()).isNotEmpty();
         assertThat(manga.getGenres()).isNotEmpty();
     }
 
     @Test
-    public void givenId_whenAddMangaIsCalled_saveManga() {
+    public void givenValidId_whenAddMangaIsCalled_saveManga() {
         Long id = 1L;
 
         when(mockSearchResults.get(id)).thenReturn(mangaWrapper1);
@@ -156,21 +159,46 @@ public class MangaServiceTest {
     }
 
     @Test
-    public void givenMangaId_whenDeleteMangaIsCalled_deleteManga() {
+    public void givenInvalidId_whenAddMangaIsCalled_throwException() {
+        Long id = 1L;
+
+        when(mockSearchResults.get(id)).thenReturn(null);
+        ReflectionTestUtils.setField(mangaService, "currentSearchResults", mockSearchResults);
+
+        assertThatThrownBy(() -> mangaService.addManga(id))
+                .isInstanceOf(MangaSearchResultNotFoundException.class)
+                .hasMessage("Manga with ID 1 not found in search results.");
+    }
+
+    @Test
+    public void givenValidId_whenDeleteMangaIsCalled_deleteManga() {
         Long id = 1L;
 
         when(mangaRepository.findById(id)).thenReturn(Optional.of(manga1));
+
         mangaService.deleteManga(id);
+
         verify(mangaRepository).delete(manga1);
+    }
+
+    @Test
+    public void givenInvalidId_whenDeleteMangaIsCalled_throwException() {
+        Long id = 1L;
+
+        when(mangaRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mangaService.deleteManga(id))
+                .isInstanceOf(MangaNotFoundException.class)
+                .hasMessage("Manga with ID 1 not found.");
     }
 
     @Test
     public void whenUpdateAllMangaInformationIsCalled_updateManga() {
         List<Manga> mangaList = List.of(manga1, manga2);
 
-        given(mangaRepository.findAll()).willReturn(mangaList);
-        given(apiService.getManga(manga1.getMalId())).willReturn(mangaWrapper1);
-        given(apiService.getManga(manga2.getMalId())).willReturn(mangaWrapper2);
+        when(mangaRepository.findAll()).thenReturn(mangaList);
+        when(apiService.getManga(manga1.getMalId())).thenReturn(mangaWrapper1);
+        when(apiService.getManga(manga2.getMalId())).thenReturn(mangaWrapper2);
 
         mangaService.updateAllMangaInformation();
 
@@ -200,6 +228,23 @@ public class MangaServiceTest {
     }
 
     @Test
+    public void givenProgressUpdateWithInvalidId_whenUpdateCollectionIsCalled_throwException() {
+        MangaProgressUpdate progressUpdate = new MangaProgressUpdate(
+                1L,
+                "FINISHED",
+                100,
+                10,
+                10
+        );
+
+        when(mangaRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mangaService.updateProgress(progressUpdate))
+                .isInstanceOf(MangaNotFoundException.class)
+                .hasMessage("Manga with ID 1 not found.");
+    }
+
+    @Test
     public void givenCollectionUpdate_whenUpdateCollectionIsCalled_returnFilterManga() {
         MangaCollectionUpdate collectionUpdate = new MangaCollectionUpdate(
                 1L,
@@ -211,7 +256,7 @@ public class MangaServiceTest {
                 "Paperback"
         );
 
-        given(mangaRepository.findById(1L)).willReturn(Optional.of(manga1));
+        when(mangaRepository.findById(1L)).thenReturn(Optional.of(manga1));
 
         mangaService.updateCollection(collectionUpdate);
 
@@ -222,6 +267,25 @@ public class MangaServiceTest {
                 m.getVolumesOwned() == collectionUpdate.getVolumesOwned() &&
                 m.getVolumesAvailable() == collectionUpdate.getVolumesAvailable()
         ));
+    }
+
+    @Test
+    public void givenCollectionUpdateWithInvalidId_whenUpdateCollectionIsCalled_throwException() {
+        MangaCollectionUpdate collectionUpdate = new MangaCollectionUpdate(
+                1L,
+                true,
+                true,
+                3,
+                1,
+                List.of(1),
+                "Paperback"
+        );
+
+        when(mangaRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mangaService.updateCollection(collectionUpdate))
+                .isInstanceOf(MangaNotFoundException.class)
+                .hasMessage("Manga with ID 1 not found.");
     }
 
     @Test
