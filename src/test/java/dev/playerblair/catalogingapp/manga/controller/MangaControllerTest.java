@@ -209,7 +209,7 @@ public class MangaControllerTest {
 
         String jsonResponse = objectMapper.writeValueAsString(List.of(manga1));
 
-        mockMvc.perform(get("/manga/list/filter")
+        mockMvc.perform(post("/manga/list/filter")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isOk())

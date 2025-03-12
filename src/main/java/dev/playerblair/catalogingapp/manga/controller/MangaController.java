@@ -65,7 +65,7 @@ public class MangaController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedManga);
     }
 
-    @GetMapping("/list/filter")
+    @PostMapping("/list/filter")
     public ResponseEntity<List<Manga>> filterManga(@RequestBody MangaFilter filter) {
         List<Manga> filteredManga = mangaService.filterManga(filter);
         return ResponseEntity.status(HttpStatus.OK).body(filteredManga);
