@@ -187,7 +187,7 @@ public class MangaControllerIntegrationTest {
 
         String requestJson = objectMapper.writeValueAsString(filter);
 
-        mockMvc.perform(get("/manga/list/filter")
+        mockMvc.perform(post("/manga/list/filter")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isOk())
